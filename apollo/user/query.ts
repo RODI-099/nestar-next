@@ -5,7 +5,7 @@ import { gql } from '@apollo/client';
  *************************/
 
 export const GET_AGENTS = gql`
-	query GetAgents($input: AgenstInquiry!) {
+	query GetAgents($input: AgentsInquiry!) {
 		getAgents(input: $input) {
 			list {
 				_id
@@ -43,28 +43,28 @@ export const GET_AGENTS = gql`
 `;
 
 export const GET_MEMBER = gql(`
-    query GetMember($input: String!) {
-        getMember(memberId: $input) {
+query GetMember($input: String!) {
+    getMember(memberId: $input) {
         _id
-            memberType
-            memberStatus
-            memberAuthType
-            memberPhone
-            memberNick
-            memberFullName
-            memberImage
-            memberAddress
-            memberDesc
-            memberProperties
-            memberArticles
-            memberPoints
-            memberLikes
-            memberViews
-            memberFollowings
-				    memberFollowers
-            memberRank
-            memberWarnings
-            memberBlocks
+        memberType
+        memberStatus
+        memberAuthType
+        memberPhone
+        memberNick
+        memberFullName
+        memberImage
+        memberAddress
+        memberDesc
+        memberProperties
+        memberArticles
+        memberPoints
+        memberLikes
+        memberViews
+        memberFollowings
+				memberFollowers
+        memberRank
+        memberWarnings
+        memberBlocks
         deletedAt
         createdAt
         updatedAt
@@ -76,7 +76,6 @@ export const GET_MEMBER = gql(`
 				}
     }
 }
-    
 `);
 
 /**************************
