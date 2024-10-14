@@ -21,8 +21,8 @@ const PopularPropertyCard = (props: PopularPropertyCardProps) => {
 
 	/** HANDLERS **/
 	const pushDetailhandler = async (propertyId: string) => {
-		console.log('ID;:', propertyId);
-		await router.push({ pathname: '/property/detail', query: { id: propertyId } });
+		console.log("propertyId:", propertyId);
+		await router.push({ pathname: '/property/detail', query: { id: propertyId } })
 	};
 
 	if (device === 'mobile') {
@@ -48,14 +48,10 @@ const PopularPropertyCard = (props: PopularPropertyCardProps) => {
 					<div className={'price'}>${property.propertyPrice}</div>
 				</Box>
 				<Box component={'div'} className={'info'}>
-					<strong
-						className={'title'}
+					<strong className={'title'}
 						onClick={() => {
 							pushDetailhandler(property._id);
-						}}
-					>
-						{property.propertyTitle}
-					</strong>
+						}}>{property.propertyTitle}</strong>
 					<p className={'desc'}>{property.propertyAddress}</p>
 					<div className={'options'}>
 						<div>
@@ -107,14 +103,10 @@ const PopularPropertyCard = (props: PopularPropertyCardProps) => {
 					<div className={'price'}>${property.propertyPrice}</div>
 				</Box>
 				<Box component={'div'} className={'info'}>
-					<strong
-						className={'title'}
+					<strong className={'title'}
 						onClick={() => {
 							pushDetailhandler(property._id);
-						}}
-					>
-						{property.propertyTitle}
-					</strong>
+						}}>{property.propertyTitle}</strong>
 					<p className={'desc'}>{property.propertyAddress}</p>
 					<div className={'options'}>
 						<div>

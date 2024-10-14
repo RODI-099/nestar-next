@@ -23,8 +23,8 @@ const TopPropertyCard = (props: TopPropertyCardProps) => {
 
 	/** HANDLERS **/
 	const pushDetailhandler = async (propertyId: string) => {
-		console.log('ID;:', propertyId);
-		await router.push({ pathname: '/property/detail', query: { id: propertyId } });
+		console.log("propertyId:", propertyId);
+		await router.push({ pathname: '/property/detail', query: { id: propertyId } })
 	};
 
 	if (device === 'mobile') {
@@ -41,14 +41,10 @@ const TopPropertyCard = (props: TopPropertyCardProps) => {
 					<div>${property?.propertyPrice}</div>
 				</Box>
 				<Box component={'div'} className={'info'}>
-					<strong
-						className={'title'}
+					<strong className={'title'}
 						onClick={() => {
 							pushDetailhandler(property._id);
-						}}
-					>
-						{property?.propertyTitle}
-					</strong>
+						}}>{property?.propertyTitle}</strong>
 					<p className={'desc'}>{property?.propertyAddress}</p>
 					<div className={'options'}>
 						<div>
@@ -76,7 +72,7 @@ const TopPropertyCard = (props: TopPropertyCardProps) => {
 								<RemoveRedEyeIcon />
 							</IconButton>
 							<Typography className="view-cnt">{property?.propertyViews}</Typography>
-							<IconButton color={'default'} onClick={() => likePropertyHandler(user, property?._id)}>
+							<IconButton color={'default'} onClick={() => likePropertyHandler(user, property?._id)} >
 								{property?.meLiked && property?.meLiked[0]?.myFavorite ? (
 									<FavoriteIcon style={{ color: 'red' }} />
 								) : (
@@ -103,14 +99,10 @@ const TopPropertyCard = (props: TopPropertyCardProps) => {
 					<div>${property?.propertyPrice}</div>
 				</Box>
 				<Box component={'div'} className={'info'}>
-					<strong
-						className={'title'}
+					<strong className={'title'}
 						onClick={() => {
 							pushDetailhandler(property._id);
-						}}
-					>
-						{property?.propertyTitle}
-					</strong>
+						}}>{property?.propertyTitle}</strong>
 					<p className={'desc'}>{property?.propertyAddress}</p>
 					<div className={'options'}>
 						<div>
