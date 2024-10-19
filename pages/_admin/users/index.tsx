@@ -33,38 +33,40 @@ const AdminUsers: NextPage = ({ initialInquiry, ...props }: any) => {
 	const [searchType, setSearchType] = useState('ALL');
 
 	/** APOLLO REQUESTS **/
-	const [updateMemberByAdmin] = useMutation(UPDATE_MEMBER_BY_ADMIN);
+	const [updateMemberByAdmin] = useMutation(UPDATE_MEMBER_BY_ADMIN)
 
 	const {
 		loading: getAllMembersByAdminLoading,
-		data: getAllMembersByAdminData,
-		error: getAllMembersByAdminError,
-		refetch: getAllMembersRefetch,
+		data: getAllMembresByAdminData,
+		error: getAllMembresByAdminError,
+		refetch: getAllMembersRefetch,  
 	} = useQuery(GET_ALL_MEMBERS_BY_ADMIN, {
 		fetchPolicy: 'network-only',
 		variables: {input: membersInquiry},
 		notifyOnNetworkStatusChange: true,
-		onCompleted: (data: T) => {
-			setMembers(data?.getAllMembersByAdmin?.list);
-			setMembersTotal(data?.getAllMembersByAdmin?.metaCounter[0]?.total ?? 0);
-
+		onCompleted:(data: T) =>  {
+			setMembers(data?.getAllMembersByAdmin?.list)
+			setMembersTotal(data?.getAllMembersByAdmin?.metaCounter?.[0]?.total ?? 0)
+			
 		}
 	})
 
 	/** LIFECYCLES **/
-	useEffect(() => { }, [membersInquiry]);
+	useEffect(() => {
+		getAllMembersRefetch({input: membersInquiry}).then()
+	}, [membersInquiry]);
 
 	/** HANDLERS **/
 	const changePageHandler = async (event: unknown, newPage: number) => {
 		membersInquiry.page = newPage + 1;
-		await getAllMembersRefetch({input: membersInquiry});
+		await getAllMembersRefetch({input: membersInquiry})
 		setMembersInquiry({ ...membersInquiry });
 	};
 
 	const changeRowsPerPageHandler = async (event: React.ChangeEvent<HTMLInputElement>) => {
 		membersInquiry.limit = parseInt(event.target.value, 10);
 		membersInquiry.page = 1;
-		await getAllMembersRefetch({input: membersInquiry});
+		await getAllMembersRefetch({input: membersInquiry})
 		setMembersInquiry({ ...membersInquiry });
 	};
 
@@ -105,11 +107,11 @@ const AdminUsers: NextPage = ({ initialInquiry, ...props }: any) => {
 		try {
 			await updateMemberByAdmin({
 				variables: {
-					input: updateData,
-				},
+					input: updateData
+				}
 			})
 			menuIconCloseHandler();
-			await getAllMembersRefetch({ input: membersInquiry})
+		    await getAllMembersRefetch({input: membersInquiry})
 		} catch (err: any) {
 			sweetErrorHandling(err).then();
 		}

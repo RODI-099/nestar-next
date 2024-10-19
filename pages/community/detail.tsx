@@ -22,15 +22,9 @@ import EditIcon from '@mui/icons-material/Edit';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { BoardArticle } from '../../libs/types/board-article/board-article';
 import { CREATE_COMMENT, LIKE_TARGET_BOARD_ARTICLE, UPDATE_COMMENT } from '../../apollo/user/mutation';
-import { GET_BOARD_ARTICLE } from '../../apollo/user/query';
-import { GET_COMMENTS } from '../../apollo/admin/query';
+import { GET_BOARD_ARTICLE, GET_COMMENTS } from '../../apollo/user/query';
 import { Messages } from '../../libs/config';
-import {
-	sweetConfirmAlert,
-	sweetMixinErrorAlert,
-	sweetMixinSuccessAlert,
-	sweetTopSmallSuccessAlert,
-} from '../../libs/sweetAlert';
+import { sweetConfirmAlert, sweetMixinErrorAlert, sweetMixinSuccessAlert, sweetTopSmallSuccessAlert, sweetTopSuccessAlert } from '../../libs/sweetAlert';
 import { CommentUpdate } from '../../libs/types/comment/comment.update';
 const ToastViewerComponent = dynamic(() => import('../../libs/components/community/TViewer'), { ssr: false });
 
@@ -68,41 +62,44 @@ const CommunityDetail: NextPage = ({ initialInput, ...props }: T) => {
 	const [boardArticle, setBoardArticle] = useState<BoardArticle>();
 
 	/** APOLLO REQUESTS **/
-	const [likeTargetBoardArticle] = useMutation(LIKE_TARGET_BOARD_ARTICLE);
-	const [createComment] = useMutation(CREATE_COMMENT);
-	const [updateComment] = useMutation(UPDATE_COMMENT);
+
+	const [likeTargetBoardArticle] = useMutation(LIKE_TARGET_BOARD_ARTICLE)
+	const [createComment] = useMutation(CREATE_COMMENT)
+	const [updateComment] = useMutation(UPDATE_COMMENT)
 
 	const {
-		loading: getBoardArticleLoading,
-		data: getBoardArticleData,
-		error: getBoardArticleError,
-		refetch: getBoardArticleRefetch,
+		loading: boardArticlesLoading,
+		data: boardArticlesData,
+		error: getBoardArticlesError,
+		refetch: boardArticlesRefetch,  
 	} = useQuery(GET_BOARD_ARTICLE, {
 		fetchPolicy: 'network-only',
-		variables: { input: articleId },
+		variables: {input: articleId},
 		notifyOnNetworkStatusChange: true,
-		onCompleted: (data: any) => {
-			setBoardArticle(data?.getBoardArticle);
-			if (data?.getBoardArticle?.memberData?.memberImage) {
-				setMemberImage(`${process.env.REACT_APP_API_URL}/${data?.getBoardArticle?.memberData?.memberImage}`);
-			}
-		},
-	});
+		onCompleted:(data: any) =>  {
+			setBoardArticle(data?.getBoardArticle)
+			if (data?.getBoardArticle?.memberData?.memberImage)
+			setMemberImage(`${process.env.REACT_APP_API_URL}/${data?.getBoardArticle?.memberData?.memberImage}`)
+		}
+	})
 
+	
 	const {
-		loading: getCommentsLoading,
-		data: getCommentsData,
-		error: getCommentsError,
-		refetch: getCommentsRefetch,
+		loading:  getCommentsLoading,
+		data:  getCommentsData,
+		error:  getCommentsError,
+		refetch:  getCommentsRefetch,  
 	} = useQuery(GET_COMMENTS, {
 		fetchPolicy: 'cache-and-network',
-		variables: { input: searchFilter },
+		variables: {input: searchFilter},
 		notifyOnNetworkStatusChange: true,
-		onCompleted: (data: any) => {
-			setComments(data?.getComments.list);
-			setTotal(data?.getComments?.metaCounter?.[0]?.total || 0);
-		},
-	});
+		onCompleted:(data: any) =>  {
+			setBoardArticle(data?.getComments.list)
+			setMemberImage(data?.getComments?.metaCounter?.[0].total || 0)
+		}
+	})
+
+
 
 	/** LIFECYCLES **/
 	useEffect(() => {
@@ -121,93 +118,97 @@ const CommunityDetail: NextPage = ({ initialInput, ...props }: T) => {
 		);
 	};
 
-	const likeBoardArticleHandler = async (user: any, id: any) => {
-		try {
-			if (likeLoading) return;
-			if (!id) return;
-			if (!user._id) throw new Error(Messages.error2);
+	const likeArticleHandler = async ( user: any, id:string ) => {
+		try{
+		   if(likeLoading) return	
+		   if(!id) return;
+		   if(!user._id) throw new Error(Messages.error2)
 
-			// execute likePropertyHandler mutation
-			await likeTargetBoardArticle({
-				variables: { input: id },
-			});
+		   await likeTargetBoardArticle({
+			   variables: {input: id},
+		   });
+		   await boardArticlesRefetch({input: articleId})
 
-			// execute getPropertiesRefetch
-			getBoardArticleRefetch({ input: articleId });
+		   await sweetTopSmallSuccessAlert('success', 800)
 
-			await sweetTopSmallSuccessAlert('success', 800);
-		} catch (err: any) {
-			console.log('ERROR, likeArticleHandler:', err);
-			sweetMixinErrorAlert(err.message).then();
-		} finally {
-			setLikeLoading(false);
+		} catch(err:any) {
+		  console.log('ERROR, likePropertyHandler:', err.message);
+		  sweetMixinErrorAlert(err.message).then()
+		  
+		}finally{
+			setLikeLoading(false)
 		}
-	};
+   }
 
 	const creteCommentHandler = async () => {
-		if (!comment) return;
-		try {
-			if (!user._id) throw new Error(Messages.error2);
-			const commentInput: CommentInput = {
-				commentGroup: CommentGroup.ARTICLE,
-				commentRefId: articleId,
-				commentContent: comment,
-			};
-			await createComment({
-				variables: {
-					input: commentInput,
-				},
-			});
-			await getCommentsRefetch({ input: searchFilter });
-			await getBoardArticleRefetch({ input: articleId });
-			setComment('');
-			await sweetMixinSuccessAlert('Sccessfully commented');
-		} catch (error: any) {
-			sweetMixinErrorAlert(error.message);
+		if(!comment) return
+		try{
+
+			if(!user._id) throw new Error(Messages.error2)
+			const commentInput : CommentInput = {
+		commentGroup: CommentGroup.ARTICLE,
+	    commentRefId: articleId,
+         commentContent:comment
+		};
+		await createComment({
+			variables:{
+				input: commentInput
+			},
+		});
+		await getCommentsRefetch({input: searchFilter})
+		await boardArticlesRefetch({ input: articleId})
+		setComment('')
+		await sweetMixinSuccessAlert('Succesfully commented')	
+		}catch(error:any){
+			await sweetMixinErrorAlert(error.message)
+
 		}
 	};
 
-	const updateButtonHandler = async (commentId: string, commentStatus?: CommentStatus.DELETE) => {
-		try {
-			if (!user?._id) throw new Error(Messages.error2);
-			if (!commentId) throw new Error('Select a commnet to update');
-			if (updatedComment === comments?.find((comment) => comment?._id === commentId)?.commentContent) return;
+	
 
-			const updateData: CommentUpdate = {
+	const updateButtonHandler = async (commentId: string, commentStatus?: CommentStatus.DELETE) => {
+		try{
+			if(!user._id) throw new Error(Messages.error2)
+			if(!commentId) throw new Error('Select Comment to update')
+		    if(updatedComment === comments?.find((comment) => comment?._id === commentId)?.commentContent)	return
+
+			const updateData : CommentUpdate = {
 				_id: commentId,
-				...(commentStatus && { commentStatus: commentStatus }),
-				...(updatedComment && { commentContent: updatedComment }),
+				...(commentStatus && {commentStatus: commentStatus}),
+				...(updatedComment && {commentContent: updatedComment})
 			};
 
-			if (!updateData?.commentContent && !updateData?.commentStatus)
-				throw new Error('Provide data to uodate your comment!');
+			if(!updateData?.commentContent && updateData.commentStatus)
+				throw new Error('Provide data to update your comment')
 
-			if (commentStatus) {
-				if (await sweetConfirmAlert('Do you want to delte the comment?')) {
+			if(!commentStatus) {
+				if(await sweetConfirmAlert( 'Do you want to delete the component')) {
 					await updateComment({
-						variables: {
-							input: updateData,
-						},
-					});
-					await sweetMixinSuccessAlert('Succesfully deleted');
-				} else return;
-			} else {
+                      variables: {
+						input: updateData
+					  },
+					})
+					await sweetTopSuccessAlert('Succcessfully deleted')
+				}else return
+			}else{
 				await updateComment({
 					variables: {
-						input: updateData,
+					  input: updateData
 					},
-				});
-				await sweetMixinSuccessAlert('Successfully updated');
+				  })
+				  await sweetTopSuccessAlert('Succcessfully updated')
 			}
-			await getCommentsRefetch({ input: searchFilter });
-			await getCommentsRefetch({ input: searchFilter });
-		} catch (error: any) {
-			await sweetMixinErrorAlert(error.message);
-		} finally {
-			setOpenBackdrop(false);
-			setUpdatedComment('');
+			await getCommentsRefetch({input :searchFilter})
+			await getCommentsRefetch({input :searchFilter})
+		}catch(error: any){
+         await sweetMixinErrorAlert(error.message)
+		}finally{
+			setOpenBackdrop(false)
+			setUpdatedComment('')
 			setUpdatedCommentWordsCnt(0);
-			setUpdatedCommentId('');
+			setUpdatedCommentId('')
+
 		}
 	};
 
@@ -328,10 +329,11 @@ const CommunityDetail: NextPage = ({ initialInput, ...props }: T) => {
 										<Stack className="info">
 											<Stack className="icon-info">
 												{boardArticle?.meLiked && boardArticle?.meLiked[0]?.myFavorite ? (
-													<ThumbUpAltIcon onClick={() => likeBoardArticleHandler(user, boardArticle?._id)} />
-												) : (
-													<ThumbUpOffAltIcon onClick={() => likeBoardArticleHandler(user, boardArticle?._id)} />
+													<ThumbUpAltIcon onClick={() => likeArticleHandler(user, boardArticle?._id)} />
+												): (
+                                                     <ThumbUpOffAltIcon onClick={() => likeArticleHandler(user, boardArticle?._id)} />
 												)}
+												 
 
 												<Typography className="text">{boardArticle?.articleLikes}</Typography>
 											</Stack>
@@ -342,9 +344,13 @@ const CommunityDetail: NextPage = ({ initialInput, ...props }: T) => {
 											</Stack>
 											<Stack className="divider"></Stack>
 											<Stack className="icon-info">
-												{total > 0 ? <ChatIcon /> : <ChatBubbleOutlineRoundedIcon />}
+												{boardArticle?.articleComments && boardArticle?.articleComments > 0 ? (
+													<ChatIcon />
+												) : (
+													<ChatBubbleOutlineRoundedIcon />
+												)}
 
-												<Typography className="text">{total}</Typography>
+												<Typography className="text">{boardArticle?.articleComments}</Typography>
 											</Stack>
 										</Stack>
 									</Stack>
@@ -354,12 +360,13 @@ const CommunityDetail: NextPage = ({ initialInput, ...props }: T) => {
 									<Stack className="like-and-dislike">
 										<Stack className="top">
 											<Button>
-												{boardArticle?.meLiked && boardArticle?.meLiked[0]?.myFavorite ? (
-													<ThumbUpAltIcon onClick={() => likeBoardArticleHandler(user, boardArticle?._id)} />
-												) : (
-													<ThumbUpOffAltIcon onClick={() => likeBoardArticleHandler(user, boardArticle?._id)} />
+											{boardArticle?.meLiked && boardArticle?.meLiked[0]?.myFavorite ? (
+													<ThumbUpAltIcon onClick={() => likeArticleHandler(user, boardArticle?._id)} />
+												): (
+                                                     <ThumbUpOffAltIcon onClick={() => likeArticleHandler(user, boardArticle?._id)} />
 												)}
-												<Typography className="text">{boardArticle?.articleLikes}</Typography>
+												 <Typography className="text">{boardArticle?.articleLikes}</Typography>
+												
 											</Button>
 										</Stack>
 									</Stack>
@@ -421,7 +428,7 @@ const CommunityDetail: NextPage = ({ initialInput, ...props }: T) => {
 																<DeleteForeverIcon sx={{ color: '#757575', cursor: 'pointer' }} />
 															</IconButton>
 															<IconButton
-																onClick={(e) => {
+																onClick={(e:any) => {
 																	setUpdatedComment(commentData?.commentContent);
 																	setUpdatedCommentWordsCnt(commentData?.commentContent?.length);
 																	setUpdatedCommentId(commentData?._id);

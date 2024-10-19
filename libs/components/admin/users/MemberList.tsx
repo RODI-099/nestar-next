@@ -111,9 +111,12 @@ interface EnhancedTableProps {
 
 function EnhancedTableHead(props: EnhancedTableProps) {
 	const { onSelectAllClick } = props;
-
+   console.log();
+   
 	return (
 		<TableHead>
+			
+			
 			<TableRow>
 				{headCells.map((headCell) => (
 					<TableCell
