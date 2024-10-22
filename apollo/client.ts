@@ -6,8 +6,7 @@ import { getMainDefinition } from '@apollo/client/utilities';
 import { onError } from '@apollo/client/link/error';
 import { getJwtToken } from '../libs/auth';
 import { TokenRefreshLink } from 'apollo-link-token-refresh';
-import { sweetErrorAlert, sweetErrorHandling } from '../libs/sweetAlert';
-import { error } from 'console';
+import { sweetErrorAlert } from '../libs/sweetAlert';
 import { socketVar } from './store';
 let apolloClient: ApolloClient<NormalizedCacheObject>;
 
@@ -30,37 +29,35 @@ const tokenRefreshLink = new TokenRefreshLink({
 	},
 });
 
+// Custom WebSocket client
 class LoggingWebSocket {
 	private socket: WebSocket;
 
-	constructor(url: string){
+	constructor(url: string) {
 		this.socket = new WebSocket(`${url}?token=${getJwtToken()}`);
-		socketVar(this.socket)
+		socketVar(this.socket);
 
 		this.socket.onopen = () => {
-			console.log('WebSocket connection');	
+			console.log('WebSocket connection!');
 		};
 
 		this.socket.onmessage = (msg) => {
-			console.log('WebSocket message:', msg.data);
-			
-		}
-		
+			console.log('WebSocket message: ', msg.data);
+		};
+
 		this.socket.onerror = (error) => {
-			console.log('WebSocket, error', error);
-			
-		}
+			console.log('WebSocket error: ', error);
+		};
 	}
 
 	send(data: string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView) {
-		this.socket.send(data)
+		this.socket.send(data);
 	}
 
 	close() {
-		this.socket.close()
+		this.socket.close();
 	}
 }
-
 
 function createIsomorphicLink() {
 	if (typeof window !== 'undefined') {
@@ -90,14 +87,14 @@ function createIsomorphicLink() {
 					return { headers: getHeaders() };
 				},
 			},
-			webSocketImpl: LoggingWebSocket
+			webSocketImpl: LoggingWebSocket,
 		});
 
 		const errorLink = onError(({ graphQLErrors, networkError, response }) => {
 			if (graphQLErrors) {
-				graphQLErrors.map(({ message, locations, path, extensions }) =>{
-					console.log(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`)
-					if (!message.includes('input')) sweetErrorAlert(message)
+				graphQLErrors.map(({ message, locations, path, extensions }) => {
+					console.log(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`);
+					if (!message.includes('input')) sweetErrorAlert(message);
 				});
 			}
 			if (networkError) console.log(`[Network error]: ${networkError}`);

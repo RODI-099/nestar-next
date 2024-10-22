@@ -19,10 +19,8 @@ import { CommentGroup } from '../../libs/enums/comment.enum';
 import { Messages, REACT_APP_API_URL } from '../../libs/config';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { CREATE_COMMENT, LIKE_TARGET_PROPERTY } from '../../apollo/user/mutation';
-import { GET_MEMBER, GET_PROPERTIES } from '../../apollo/user/query';
+import { GET_COMMENTS, GET_MEMBER, GET_PROPERTIES } from '../../apollo/user/query';
 import { T } from '../../libs/types/common';
-import { GET_COMMENTS } from '../../apollo/admin/query';
-import { Message } from '../../libs/enums/common.enum';
 
 export const getStaticProps = async ({ locale }: any) => ({
 	props: {
@@ -34,8 +32,8 @@ const AgentDetail: NextPage = ({ initialInput, initialComment, ...props }: any) 
 	const device = useDeviceDetect();
 	const router = useRouter();
 	const user = useReactiveVar(userVar);
-	const [agentId, setAgentId] = useState<string | null>(null);
-	const [agent, setAgent] = useState<Member | null>(null);
+    const [agentId, setAgentId] = useState<string | null>(null);
+    const [agent, setAgent] = useState<Member | null>(null);
 	const [searchFilter, setSearchFilter] = useState<PropertiesInquiry>(initialInput);
 	const [agentProperties, setAgentProperties] = useState<Property[]>([]);
 	const [propertyTotal, setPropertyTotal] = useState<number>(0);
@@ -49,71 +47,75 @@ const AgentDetail: NextPage = ({ initialInput, initialComment, ...props }: any) 
 	});
 
 	/** APOLLO REQUESTS **/
-	const [createComment] = useMutation(CREATE_COMMENT);
-	const [likeTargetProperty] = useMutation(LIKE_TARGET_PROPERTY);
+	const [createComment]=useMutation(CREATE_COMMENT);
+	const [likeTargetProperty] = useMutation(LIKE_TARGET_PROPERTY)
 
 	const {
-		loading: getMemberLoading,
-		data: getMemberData,
-		error: getAgentMemberError,
-		refetch: getMemberRefetch,
-	} = useQuery(GET_MEMBER, {
-		fetchPolicy: 'network-only',
-		variables: { input: agentId },
-		skip: !agentId,
-		notifyOnNetworkStatusChange: true,
-		onCompleted: (data: T) => {
-			setAgent(data?.getMember);
-			setSearchFilter({
-				...searchFilter,
-				search: {
-					memberId: data?.getMember?._id,
-				},
-			});
-			setCommentInquiry({
-				...commentInquiry,
-				search: {
-					commentRefId: data?.getMember?._id,
-				},
-			});
-			setInsertCommentData({
-				...insertCommentData,
-				commentRefId: data?.getMember?._id,
-			});
-		},
-	});
+        loading: getMemberLoading,
+        data: getMemberData,
+        error: getMemberError,
+        refetch: getMemberRefetch,
+    } = useQuery(GET_MEMBER, {
+        fetchPolicy: 'network-only',
+        variables: { input: agentId },
+        skip: !agentId,
+        notifyOnNetworkStatusChange: true,
+        onCompleted: (data: T) => {
+            setAgent(data?.getMember);
+            setSearchFilter({
+                ...searchFilter,
+                search: {
+                    memberId: data?.getMember?._id,
+                },
+            });
+            setCommentInquiry({
+                ...commentInquiry,
+                search: {
+                    commentRefId: data?.getMember?._id,
+                },
+            });
+            setInsertCommentData({
+                ...insertCommentData,
+                commentRefId: data?.getMember?._id,
+            });
+        },
+    });
+
 
 	const {
 		loading: getPropertiesLoading,
 		data: getPropertiesData,
 		error: getPropertiesError,
-		refetch: getPropertiesRefetch,
+		refetch: getPropertiesRefetch,  
 	} = useQuery(GET_PROPERTIES, {
 		fetchPolicy: 'network-only',
-		variables: { input: searchFilter },
+		variables: {input: searchFilter},
 		skip: !searchFilter.search.memberId,
 		notifyOnNetworkStatusChange: true,
-		onCompleted: (data: T) => {
-			setAgentProperties(data?.getProperties?.list);
-			setPropertyTotal(data?.getProperties?.metaCounter[0]?.total ?? 0);
-		},
-	});
+		onCompleted:(data: T) =>  {
+			setAgentProperties(data?.getProperties?.list)
+			setPropertyTotal(data?.getProperties?.metaCounter[0]?.total ?? 0)
+		}
+	})
 
 	const {
 		loading: getCommentsLoading,
 		data: getCommentsData,
 		error: getCommentsError,
-		refetch: getCommentsRefetch,
+		refetch: getCommentsRefetch,  
 	} = useQuery(GET_COMMENTS, {
 		fetchPolicy: 'network-only',
-		variables: { input: commentInquiry },
+		variables: {input: commentInquiry},
 		skip: !commentInquiry.search.commentRefId,
 		notifyOnNetworkStatusChange: true,
-		onCompleted: (data: T) => {
-			setAgentComments(data?.getComments?.list);
-			setCommentTotal(data?.getComments?.metaCounter[0]?.total ?? 0);
-		},
-	});
+		onCompleted:(data: T) =>  {
+			setAgentComments(data?.getComments?.list)
+			setCommentTotal(data?.getComments?.metaCounter[0]?.total ?? 0)
+		}
+	})
+
+
+
 
 	/** LIFECYCLES **/
 	useEffect(() => {
@@ -143,42 +145,43 @@ const AgentDetail: NextPage = ({ initialInput, initialComment, ...props }: any) 
 		setCommentInquiry({ ...commentInquiry });
 	};
 
+	
+
 	const createCommentHandler = async () => {
 		try {
-			if (!user._id) throw new Error(Messages.error2);
-			if (user._id === agentId) throw new Error('Cannot write a review for yourself');
-			await createComment({
-				variables: {
-					input: insertCommentData,
-				},
-			});
+			if(!user._id) throw new Error(Messages.error2);
+			if(user._id === agentId) throw new Error('Cannot write for yourself')
+				await createComment({
+			variables: {
+				input: insertCommentData
+			}})
 
-			setInsertCommentData({ ...insertCommentData, commentContent: '' });
+			setInsertCommentData({...insertCommentData, commentContent: ''});
 
-			await getCommentsRefetch({ input: commentInquiry });
+			await getCommentsRefetch({input: commentInquiry})
 		} catch (err: any) {
-			await sweetErrorHandling(err);
+			sweetErrorHandling(err).then();
 		}
 	};
 
-	const likePropertyHandler = async (user: any, id: string) => {
-		try {
-			if (!id) return;
-			if (!user._id) throw new Error(Messages.error2);
+	const likePropertyHandler = async (user: any, id:string) => {
+		try{
+		   if(!id) return;
+		   if(!user._id) throw new Error(Messages.error2)
 
-			await likeTargetProperty({
-				variables: {
-					input: id,
-				},
-			});
+		   await likeTargetProperty({
+			   variables: {input: id},
+		   });
+		   await getPropertiesRefetch({input: searchFilter})
 
-			await getPropertiesRefetch({ input: searchFilter });
-			await sweetTopSmallSuccessAlert('success', 800);
-		} catch (err: any) {
-			console.log('ERROR, likePropertyHandler:', err.message);
-			await sweetMixinErrorAlert(err);
+		   await sweetTopSmallSuccessAlert('success', 800)
+
+		} catch(err:any) {
+		  console.log('ERROR, likePropertyHandler:', err.message);
+		  sweetMixinErrorAlert(err.message).then()
+		  
 		}
-	};
+   }
 
 	if (device === 'mobile') {
 		return <div>AGENT DETAIL PAGE MOBILE</div>;
@@ -204,11 +207,7 @@ const AgentDetail: NextPage = ({ initialInput, initialComment, ...props }: any) 
 							{agentProperties.map((property: Property) => {
 								return (
 									<div className={'wrap-main'} key={property?._id}>
-										<PropertyBigCard
-											property={property}
-											likePropertyHandler={likePropertyHandler}
-											key={property?._id}
-										/>
+										<PropertyBigCard property={property} key={property?._id} />
 									</div>
 								);
 							})}
@@ -324,3 +323,4 @@ AgentDetail.defaultProps = {
 };
 
 export default withLayoutBasic(AgentDetail);
+
