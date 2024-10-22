@@ -111,7 +111,8 @@ const AgentList: NextPage = ({ initialInput, ...props }: any) => {
 		await router.push(`/agent?input=${JSON.stringify(searchFilter)}`, `/agent?input=${JSON.stringify(searchFilter)}`, {
 			scroll: false,
 		});
-		setCurrentPage(value);
+		// setCurrentPage(value);
+		await getAgentsRefetch({ input: searchFilter });
 	};
 
 	const likeMemberHandler = async (user: any, id: string) => {
