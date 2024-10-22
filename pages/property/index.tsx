@@ -81,7 +81,8 @@ const PropertyList: NextPage = ({ initialInput, ...props }: any) => {
 				scroll: false,
 			},
 		);
-		setCurrentPage(value);
+		//setCurrentPage(value);
+		await getPropertiesRefetch({ input: searchFilter });
 	};
 
 	const likePropertyHandler = async (user: T, id: string) => {
